@@ -15,9 +15,9 @@ class DriverEvent
     use Dispatchable;
 
     public string $eventName;
-    public array $payload;
+    public mixed $payload;
 
-    public function __construct(string $eventName, array $payload = [])
+    public function __construct(string $eventName, mixed $payload = null)
     {
         $this->eventName = $eventName;
         $this->payload = $payload;

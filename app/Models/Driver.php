@@ -6,10 +6,8 @@ use Illuminate\Support\Facades\Event;
 
 class Driver
 {
-    public function pleaseDo(string $eventName, array $payload = []): void
+    public function pleaseDo(string $eventName, mixed $payload = null): void
     {
-        // Dispatch an event
-        //event(new DriverEvent($eventName, $payload));
         $results = Event::dispatch(new DriverEvent($eventName, $payload));
     }
 }

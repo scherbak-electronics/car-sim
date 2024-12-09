@@ -3,6 +3,8 @@ namespace App\Services;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class EventResolver
 {
@@ -16,9 +18,8 @@ class EventResolver
     /**
      * Resolve and execute the event.
      */
-    public function resolveAndExecute(string $eventName, array $payload = [])
+    public function resolveAndExecute(string $eventName, mixed $payload = null)
     {
-        // Fetch the event mapping from the config
         $mapping = Config::get("event_resolver.{$eventName}");
 
         if (!$mapping) {
@@ -27,20 +28,41 @@ class EventResolver
 
         $interface = $mapping['interface'] ?? null;
         $method = $mapping['method'] ?? null;
+        $rules = $mapping['validation_rules'] ?? '';
 
         if (!$interface || !$method) {
             throw new \InvalidArgumentException("Invalid mapping configuration for event: {$eventName}");
         }
 
-        // Resolve the class implementing the interface
+        if (!empty($rules)) {
+            $payload = $this->getValidated($eventName, $payload, $rules);
+        }
+
         $implementation = $this->container->make($interface);
 
-        // Ensure the method exists on the resolved class
         if (!method_exists($implementation, $method)) {
             throw new \BadMethodCallException("Method {$method} does not exist on the class implementing {$interface}.");
         }
 
-        // Call the method dynamically
         return call_user_func_array([$implementation, $method], $payload);
+    }
+
+    protected function getValidated(string $event, mixed $payload, string $rules): mixed
+    {
+        if (!$rules) {
+            return $payload;
+        }
+
+        $validator = Validator::make(
+            [$event => $payload ?? null],
+            [$event => $rules]
+        );
+
+        try {
+            return $validator->validated()['value'];
+        } catch (\Exception $e) {
+            Log::error("Validation error for event '{$event}': " . $e->getMessage());
+            return null;
+        }
     }
 }
