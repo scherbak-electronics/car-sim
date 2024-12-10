@@ -3,9 +3,11 @@ namespace App\Contracts;
 
 interface MediaPlayerInterface
 {
-    public function radio(bool $listen): void;
-    public function cd(bool $play): void;
-    public function spotify(bool $listen): void;
-    public function getStatus(): array; // [isPlaying, source]
+    public function radio(bool $listen): array|string;
+    public function cd(bool $play): array|string;
+    public function spotify(bool $listen): array|string;
+    public function getStatus(): array|string;
+    public function powerOn(): void;
+    public function powerOff(): void;
 }
 

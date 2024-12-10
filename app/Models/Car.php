@@ -13,12 +13,8 @@ class Car
         $this->resolver = $resolver;
     }
 
-    /**
-     * Handle the incoming DriverEvent.
-     */
     public function handle(DriverEvent $event): array
     {
-        // Pass the event name and payload to the resolver
         return $this->resolver->resolveAndExecute($event->eventName, $event->payload);
     }
 }

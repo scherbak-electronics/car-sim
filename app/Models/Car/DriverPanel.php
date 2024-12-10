@@ -26,49 +26,43 @@ class DriverPanel implements DriverPanelInterface
         $this->mediaPlayer = $mediaPlayer;
     }
 
-    public function startCar(array $data): void
+    public function startCar(): array|string
     {
-        $this->engineProcessor->startEngine();
+        return $this->engineProcessor->startEngine();
     }
 
-    public function stopCar(array $data): void
+    public function stopCar(): array|string
     {
-        $this->engineProcessor->stopEngine();
+        return $this->engineProcessor->stopEngine();
     }
 
-    public function driveCar(array $data): void
+    public function driveCar(): array|string
     {
-        $this->engineProcessor->drive();
+        return $this->engineProcessor->drive();
     }
 
-    public function unlockDoors(array $data): void
+    public function unlockDoors(string $side): array|string
     {
         $this->door->unlock();
     }
 
-    public function lockDoors(array $data): void
+    public function lockDoors(string $side): array|string
     {
         $this->door->lock();
     }
 
-    public function radio(array $data): void
+    public function radio(bool $listen): array|string
     {
-        $this->mediaPlayer->radio(
-            data_get($data, 'listen', false)
-        );
+        return $this->mediaPlayer->radio($listen);
     }
 
-    public function cd(array $data): void
+    public function cd(bool $listen): array|string
     {
-        $this->mediaPlayer->cd(
-            data_get($data, 'play', false)
-        );
+        return $this->mediaPlayer->cd($listen);
     }
 
-    public function spotify(array $data): void
+    public function spotify(bool $listen): array|string
     {
-        $this->mediaPlayer->spotify(
-            data_get($data, 'listen', false)
-        );
+        return $this->mediaPlayer->spotify($listen);
     }
 }

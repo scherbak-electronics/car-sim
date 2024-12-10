@@ -4,6 +4,7 @@ namespace App\Models\Car;
 use App\Contracts\EngineInterface;
 use App\Contracts\EngineProcessorInterface;
 use App\Contracts\FuelTankInterface;
+use App\Contracts\MediaPlayerInterface;
 
 class EngineProcessor implements EngineProcessorInterface
 {
@@ -11,44 +12,63 @@ class EngineProcessor implements EngineProcessorInterface
     const COLD_START_FUEL_CONSUMPTION = 0.000695;
     protected EngineInterface $engine;
     protected FuelTankInterface $fuelTank;
+    protected MediaPlayerInterface $mediaPlayer;
 
     protected int $odometer = 0; // Example odometer value
 
-    public function __construct(EngineInterface $engine, FuelTankInterface $fuelTank)
+    public function __construct(
+        EngineInterface $engine,
+        FuelTankInterface $fuelTank,
+        MediaPlayerInterface $mediaPlayer
+    )
     {
         $this->engine = $engine;
         $this->fuelTank = $fuelTank;
+        $this->mediaPlayer = $mediaPlayer;
     }
-    public function startEngine(): void
+    public function startEngine(): array|string
     {
         if ($this->engine->isRunning()) {
-            echo "Engine is already running.\n";
-            return;
+            return "Engine is already running.\n";
         }
 
         if (!$this->checkFuel()) {
-            echo "Cannot start the engine: No fuel.\n";
-            return;
+            return "Cannot start the engine: No fuel.\n";
         }
 
         $this->fuelTank->lock();
         $this->engine->start();
+        $this->mediaPlayer->powerOn();
         $this->fuelTank->consumeFuel(EngineProcessor::COLD_START_FUEL_CONSUMPTION);
+        return [];
     }
 
-    public function stopEngine(): void
+    public function stopEngine(): array|string
     {
-        // TODO: Implement stopEngine() method.
+        if (!$this->engine->isRunning()) {
+            return "Engine is not running.\n";
+        }
+        $this->fuelTank->unlock();
+        $this->engine->stop();
+        $this->mediaPlayer->powerOff();
+        return [];
     }
 
     public function getOdometerReading(): int
     {
-        // TODO: Implement getOdometerReading() method.
+        return 0;
     }
 
-    public function drive()
+    public function drive(): array|string
     {
-
+        if (!$this->engine->isRunning()) {
+            return "Engine is not running.\n";
+        }
+        if (!$this->checkFuel()) {
+            $this->stopEngine();
+            return "Cannot drive the car: No fuel.\n";
+        }
+        return [];
     }
 
     protected function checkFuel(): bool

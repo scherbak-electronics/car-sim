@@ -2,36 +2,30 @@
 namespace App\Models\Car;
 
 use App\Contracts\EngineInterface;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class Engine implements EngineInterface
 {
+    const RUNNING_KEY = 'engine:running';
     public function start(): void
     {
-        echo "Engine started.\n";
+        Cache::store('redis')->put(self::RUNNING_KEY, true);
     }
 
     public function stop(): void
     {
-        echo "Engine stopped.\n";
+        Cache::store('redis')->put(self::RUNNING_KEY, false);
     }
 
-    public function startEngine(): void
+    public function isRunning(): bool
     {
-        // TODO: Implement startEngine() method.
-    }
-
-    public function stopEngine(): void
-    {
-        // TODO: Implement stopEngine() method.
-    }
-
-    public function processEvent(string $event, array $data = []): void
-    {
-        // TODO: Implement processEvent() method.
-    }
-
-    public function getOdometerReading(): int
-    {
-        // TODO: Implement getOdometerReading() method.
+        try {
+            return Cache::store('redis')->get(self::RUNNING_KEY, false);
+        } catch (InvalidArgumentException $e) {
+            Log::error("Error: " . $e->getMessage());
+            return false;
+        }
     }
 }

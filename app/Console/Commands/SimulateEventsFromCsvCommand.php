@@ -10,7 +10,7 @@ class SimulateEventsFromCsvCommand extends Command
     protected $signature = 'car:simulate:csv {file}';
     protected $description = 'Simulate car events from a CSV file';
 
-    public function handle()
+    public function handle(): void
     {
         $file = $this->argument('file');
 
