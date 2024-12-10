@@ -6,5 +6,5 @@ interface EngineProcessorInterface
     public function startEngine(): array|string;      // Start the engine
     public function stopEngine(): array|string;       // Stop the engine
 
-    public function getOdometerReading(): int; // Get the odometer reading
+    public function getOdometerReading(): float; // Get the odometer reading
 }

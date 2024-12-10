@@ -5,11 +5,18 @@ use App\Contracts\EngineInterface;
 use App\Contracts\EngineProcessorInterface;
 use App\Contracts\FuelTankInterface;
 use App\Contracts\MediaPlayerInterface;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class EngineProcessor implements EngineProcessorInterface
 {
     const MIN_ALLOWED_FUEL_LEVEL = 0.02;
     const COLD_START_FUEL_CONSUMPTION = 0.000695;
+    const KM_PER_ONE_DRIVE = 25;
+    const LITERS_PER_100KM = 10;
+    const ODOMETER_KEY = 'engine_processor:odometer';
+
     protected EngineInterface $engine;
     protected FuelTankInterface $fuelTank;
     protected MediaPlayerInterface $mediaPlayer;
@@ -54,7 +61,7 @@ class EngineProcessor implements EngineProcessorInterface
         return [];
     }
 
-    public function getOdometerReading(): int
+    public function getOdometerReading(): float
     {
         return 0;
     }
@@ -68,7 +75,15 @@ class EngineProcessor implements EngineProcessorInterface
             $this->stopEngine();
             return "Cannot drive the car: No fuel.\n";
         }
-        return [];
+
+        //todo: calculate distance for odometer if fuel remains for less then one drive
+        $this->fuelTank->consumeFuel(
+            $this->calculateOneDriveConsumption()
+        );
+        $this->setOdometer(
+            $this->getOdometer() + self::KM_PER_ONE_DRIVE
+        );
+        return []; //todo: return status
     }
 
     protected function checkFuel(): bool
@@ -80,6 +95,26 @@ class EngineProcessor implements EngineProcessorInterface
         }
 
         return true;
+    }
+
+    protected function calculateOneDriveConsumption(): float
+    {
+        return (self::KM_PER_ONE_DRIVE * self::LITERS_PER_100KM) / 100;
+    }
+
+    protected function setOdometer(float $distance): void
+    {
+        Cache::store('redis')->put(self::ODOMETER_KEY, $distance);
+    }
+
+    protected function getOdometer(): float
+    {
+        try {
+            return Cache::store('redis')->get(self::ODOMETER_KEY, 0.0);
+        } catch (InvalidArgumentException $e) {
+            Log::error("Error: " . $e->getMessage());
+            return 0.0;
+        }
     }
 }
 
